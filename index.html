@@ -1,0 +1,2999 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>CardioVision 3D | AI Cardiac Risk</title>
+
+    <!-- THREE.JS IMPORT MAP -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+        }
+    }
+    </script>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+
+        body {
+
+            font-family:
+                Inter,
+                Segoe UI,
+                Arial,
+                sans-serif;
+
+            background:
+                radial-gradient(
+                    circle at 10% 0%,
+                    rgba(42, 91, 155, 0.20),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 90% 20%,
+                    rgba(116, 55, 130, 0.12),
+                    transparent 28%
+                ),
+                #050c16;
+
+            color: #eaf2ff;
+
+            min-height: 100vh;
+        }
+
+
+        /* =========================================
+           NAVBAR
+        ========================================= */
+
+        .navbar {
+
+            height: 72px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            padding: 0 42px;
+
+            background:
+                rgba(5, 13, 24, 0.82);
+
+            border-bottom:
+                1px solid rgba(255,255,255,0.07);
+
+            backdrop-filter: blur(18px);
+
+            position: sticky;
+
+            top: 0;
+
+            z-index: 100;
+        }
+
+
+        .brand {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+        }
+
+
+        .brand-icon {
+
+            width: 40px;
+            height: 40px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 12px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #2768bd,
+                    #6d4bc1
+                );
+
+            font-size: 20px;
+
+            box-shadow:
+                0 0 25px rgba(70,130,220,0.25);
+        }
+
+
+        .brand-text strong {
+
+            display: block;
+
+            font-size: 17px;
+
+            letter-spacing: 0.3px;
+        }
+
+
+        .brand-text span {
+
+            display: block;
+
+            margin-top: 2px;
+
+            color: #7288a5;
+
+            font-size: 10px;
+
+            letter-spacing: 1.5px;
+        }
+
+
+        .system-status {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            padding: 9px 14px;
+
+            border-radius: 20px;
+
+            background:
+                rgba(45, 200, 140, 0.08);
+
+            border:
+                1px solid rgba(45,200,140,0.18);
+
+            color: #66dca8;
+
+            font-size: 11px;
+
+            font-weight: 700;
+
+            letter-spacing: 0.8px;
+        }
+
+
+        .status-light {
+
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: #53d69b;
+
+            box-shadow:
+                0 0 12px #53d69b;
+        }
+
+
+        /* =========================================
+           MAIN
+        ========================================= */
+
+        .main {
+
+            max-width: 1450px;
+
+            margin: auto;
+
+            padding: 34px 28px 60px;
+        }
+
+
+        .page-heading {
+
+            margin-bottom: 28px;
+        }
+
+
+        .eyebrow {
+
+            color: #6ea8ff;
+
+            font-size: 11px;
+
+            font-weight: 700;
+
+            letter-spacing: 2.5px;
+
+            margin-bottom: 8px;
+        }
+
+
+        .page-heading h1 {
+
+            font-size: 34px;
+
+            line-height: 1.15;
+
+            margin-bottom: 8px;
+        }
+
+
+        .page-heading p {
+
+            color: #8195ae;
+
+            font-size: 14px;
+
+            max-width: 720px;
+
+            line-height: 1.6;
+        }
+
+
+        /* =========================================
+           INPUT CARD
+        ========================================= */
+
+        .patient-card {
+
+            background:
+                rgba(10, 23, 39, 0.76);
+
+            border:
+                1px solid rgba(126,157,197,0.12);
+
+            border-radius: 22px;
+
+            padding: 25px;
+
+            margin-bottom: 26px;
+
+            box-shadow:
+                0 18px 50px rgba(0,0,0,0.20);
+        }
+
+
+        .section-heading {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 22px;
+        }
+
+
+        .section-heading h2 {
+
+            font-size: 19px;
+        }
+
+
+        .section-heading p {
+
+            color: #7187a2;
+
+            font-size: 11px;
+
+            margin-top: 4px;
+        }
+
+
+        .section-number {
+
+            width: 34px;
+            height: 34px;
+
+            border-radius: 10px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background: #142b48;
+
+            color: #72a7ff;
+
+            font-weight: 700;
+        }
+
+
+        .form-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, minmax(0, 1fr));
+
+            gap: 14px;
+        }
+
+
+        .field {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 7px;
+        }
+
+
+        .field label {
+
+            color: #8fa4bd;
+
+            font-size: 11px;
+
+            font-weight: 600;
+        }
+
+
+        .field input,
+        .field select {
+
+            width: 100%;
+
+            height: 42px;
+
+            padding: 0 12px;
+
+            border-radius: 10px;
+
+            border:
+                1px solid #1d344e;
+
+            background: #091827;
+
+            color: #dce9f8;
+
+            outline: none;
+
+            font-size: 13px;
+
+            transition: 0.2s;
+        }
+
+
+        .field input:focus,
+        .field select:focus {
+
+            border-color: #4c8fe8;
+
+            box-shadow:
+                0 0 0 3px rgba(76,143,232,0.10);
+        }
+
+
+        .field select option {
+
+            background: #091827;
+
+            color: white;
+        }
+
+
+        .predict-row {
+
+            display: flex;
+
+            justify-content: flex-end;
+
+            margin-top: 22px;
+
+            padding-top: 20px;
+
+            border-top:
+                1px solid rgba(255,255,255,0.06);
+        }
+
+
+        #predict-btn {
+
+            border: none;
+
+            cursor: pointer;
+
+            padding: 13px 25px;
+
+            border-radius: 11px;
+
+            color: white;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #347de0,
+                    #7354c9
+                );
+
+            box-shadow:
+                0 10px 25px rgba(55,115,210,0.25);
+
+            transition: 0.2s;
+        }
+
+
+        #predict-btn:hover {
+
+            transform: translateY(-1px);
+
+            box-shadow:
+                0 14px 30px rgba(55,115,210,0.35);
+        }
+
+
+        #predict-btn:disabled {
+
+            opacity: 0.6;
+
+            cursor: wait;
+
+            transform: none;
+        }
+
+
+        /* =========================================
+           DASHBOARD
+        ========================================= */
+
+        .dashboard {
+
+            display: grid;
+
+            grid-template-columns:
+                minmax(0, 1.65fr)
+                minmax(340px, 0.8fr);
+
+            gap: 22px;
+        }
+
+
+        .heart-card,
+        .risk-panel {
+
+            background:
+                rgba(10, 23, 39, 0.82);
+
+            border:
+                1px solid rgba(126,157,197,0.13);
+
+            border-radius: 22px;
+
+            box-shadow:
+                0 20px 55px rgba(0,0,0,0.20);
+        }
+
+
+        /* =========================================
+           HEART
+        ========================================= */
+
+        .heart-card {
+
+            padding: 20px;
+        }
+
+
+        .card-header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 15px;
+        }
+
+
+        .card-header h2 {
+
+            font-size: 18px;
+
+            margin-bottom: 4px;
+        }
+
+
+        .card-header p {
+
+            color: #7187a2;
+
+            font-size: 11px;
+        }
+
+
+        .view-tag {
+
+            padding: 7px 11px;
+
+            border-radius: 8px;
+
+            background: #112843;
+
+            color: #6ea8ff;
+
+            font-size: 9px;
+
+            font-weight: 700;
+
+            letter-spacing: 1px;
+        }
+
+
+        #heart-container {
+
+            width: 100%;
+
+            height: 570px;
+
+            position: relative;
+
+            overflow: hidden;
+
+            border-radius: 18px;
+
+            background:
+                radial-gradient(
+                    circle at center,
+                    #183656 0%,
+                    #0b1c2e 42%,
+                    #050d17 100%
+                );
+        }
+
+
+        #heart-container canvas {
+
+            display: block;
+
+            width: 100%;
+
+            height: 100%;
+        }
+
+
+        .heart-loading {
+
+            position: absolute;
+
+            inset: 0;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 12px;
+
+            background:
+                rgba(4,12,21,0.55);
+
+            z-index: 5;
+
+            color: #90a5bd;
+
+            font-size: 12px;
+
+            pointer-events: none;
+        }
+
+
+        .loader-circle {
+
+            width: 34px;
+
+            height: 34px;
+
+            border-radius: 50%;
+
+            border:
+                3px solid #203953;
+
+            border-top-color: #68a4ff;
+
+            animation:
+                spin 0.8s linear infinite;
+        }
+
+
+        @keyframes spin {
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+
+        .heart-bottom {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            margin-top: 13px;
+
+            color: #7187a2;
+
+            font-size: 11px;
+        }
+
+
+        .control-chip {
+
+            padding: 7px 10px;
+
+            border-radius: 8px;
+
+            background: #0d1e32;
+
+            border:
+                1px solid rgba(255,255,255,0.05);
+        }
+
+
+        #reset-heart {
+
+            margin-left: auto;
+
+            border:
+                1px solid #213a56;
+
+            background: #10243a;
+
+            color: #a9bdd5;
+
+            padding: 8px 13px;
+
+            border-radius: 8px;
+
+            cursor: pointer;
+
+            font-size: 11px;
+        }
+
+
+        #reset-heart:hover {
+
+            background: #183451;
+
+            color: white;
+        }
+
+
+        /* =========================================
+           RISK PANEL
+        ========================================= */
+
+        .risk-panel {
+
+            padding: 22px;
+        }
+
+
+        .risk-title {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 20px;
+        }
+
+
+        .risk-title h2 {
+
+            font-size: 20px;
+
+            margin-top: 5px;
+        }
+
+
+        .risk-title p {
+
+            color: #7187a2;
+
+            font-size: 10px;
+        }
+
+
+        .ai-badge {
+
+            width: 39px;
+
+            height: 39px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 11px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #173963,
+                    #29234c
+                );
+
+            color: #77adff;
+
+            font-size: 18px;
+        }
+
+
+        .cad-box {
+
+            padding: 19px;
+
+            border-radius: 16px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(45,83,137,0.35),
+                    rgba(12,28,47,0.85)
+                );
+
+            border:
+                1px solid rgba(100,150,220,0.15);
+        }
+
+
+        .cad-label {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            color: #91a7c0;
+
+            font-size: 12px;
+        }
+
+
+        .cad-label span:last-child {
+
+            color: #ff7792;
+        }
+
+
+        .cad-value {
+
+            font-size: 48px;
+
+            font-weight: 750;
+
+            letter-spacing: -2px;
+
+            margin: 7px 0 12px;
+        }
+
+
+        .cad-value small {
+
+            font-size: 18px;
+
+            color: #758ca8;
+        }
+
+
+        .progress {
+
+            height: 7px;
+
+            background: #172c45;
+
+            border-radius: 20px;
+
+            overflow: hidden;
+        }
+
+
+        .progress-bar {
+
+            height: 100%;
+
+            width: 0%;
+
+            border-radius: 20px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #4d94ff,
+                    #ff6586
+                );
+
+            transition:
+                width 0.8s ease;
+        }
+
+
+        .cad-description {
+
+            display: block;
+
+            color: #6f859e;
+
+            font-size: 10px;
+
+            margin-top: 10px;
+        }
+
+
+        /* =========================================
+           VESSELS
+        ========================================= */
+
+        .sub-title {
+
+            margin: 23px 0 11px;
+
+            font-size: 12px;
+
+            color: #a9bad0;
+
+            font-weight: 700;
+        }
+
+
+        .vessel-list {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 10px;
+        }
+
+
+        .vessel {
+
+            padding: 13px;
+
+            border-radius: 13px;
+
+            background: #0b1b2d;
+
+            border:
+                1px solid rgba(255,255,255,0.055);
+        }
+
+
+        .vessel-top {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+        }
+
+
+        .vessel-name {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            font-size: 12px;
+
+            font-weight: 700;
+        }
+
+
+        .vessel-dot {
+
+            width: 8px;
+
+            height: 8px;
+
+            border-radius: 50%;
+        }
+
+
+        .lad-dot {
+
+            background: #ff6687;
+
+            box-shadow:
+                0 0 10px #ff6687;
+        }
+
+
+        .lcx-dot {
+
+            background: #a979ff;
+
+            box-shadow:
+                0 0 10px #a979ff;
+        }
+
+
+        .rca-dot {
+
+            background: #ffb35c;
+
+            box-shadow:
+                0 0 10px #ffb35c;
+        }
+
+
+        .vessel-value {
+
+            font-size: 19px;
+
+            font-weight: 700;
+        }
+
+
+        .vessel-bar {
+
+            height: 5px;
+
+            background: #172b43;
+
+            border-radius: 10px;
+
+            overflow: hidden;
+
+            margin-top: 9px;
+        }
+
+
+        .vessel-fill {
+
+            height: 100%;
+
+            width: 0%;
+
+            border-radius: 10px;
+
+            transition:
+                width 0.8s ease;
+        }
+
+
+        .lad-fill {
+            background: #ff6687;
+        }
+
+        .lcx-fill {
+            background: #a979ff;
+        }
+
+        .rca-fill {
+            background: #ffb35c;
+        }
+
+
+        .vessel-caption {
+
+            display: block;
+
+            margin-top: 6px;
+
+            color: #657b95;
+
+            font-size: 9px;
+        }
+
+
+        /* =========================================
+           MODEL STATUS
+        ========================================= */
+
+        .model-info {
+
+            margin-top: 18px;
+
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 8px;
+        }
+
+
+        .info-box {
+
+            padding: 11px;
+
+            border-radius: 10px;
+
+            background: #0b1a2b;
+
+            border:
+                1px solid rgba(255,255,255,0.05);
+        }
+
+
+        .info-box span {
+
+            display: block;
+
+            color: #637a94;
+
+            font-size: 9px;
+
+            margin-bottom: 4px;
+        }
+
+
+        .info-box strong {
+
+            font-size: 11px;
+
+            color: #a9c1dc;
+        }
+
+
+        /* =========================================
+           DISCLAIMER
+        ========================================= */
+
+        .disclaimer {
+
+            margin-top: 20px;
+
+            padding: 15px 17px;
+
+            display: flex;
+
+            gap: 12px;
+
+            border-radius: 14px;
+
+            background:
+                rgba(255,190,80,0.055);
+
+            border:
+                1px solid rgba(255,190,80,0.12);
+        }
+
+
+        .warning {
+
+            font-size: 18px;
+
+            color: #e9bd69;
+        }
+
+
+        .disclaimer strong {
+
+            color: #e4c47f;
+
+            font-size: 11px;
+        }
+
+
+        .disclaimer p {
+
+            color: #788ca4;
+
+            font-size: 10px;
+
+            line-height: 1.5;
+
+            margin-top: 3px;
+        }
+
+
+        /* =========================================
+           MESSAGE
+        ========================================= */
+
+        #message {
+
+            display: none;
+
+            margin-top: 15px;
+
+            padding: 12px 15px;
+
+            border-radius: 10px;
+
+            font-size: 11px;
+        }
+
+
+        .message-success {
+
+            display: block !important;
+
+            background:
+                rgba(52,205,143,0.08);
+
+            border:
+                1px solid rgba(52,205,143,0.15);
+
+            color: #67dbaa;
+        }
+
+
+        .message-error {
+
+            display: block !important;
+
+            background:
+                rgba(255,85,110,0.08);
+
+            border:
+                1px solid rgba(255,85,110,0.15);
+
+            color: #ff8295;
+        }
+
+
+        /* =========================================
+           RESPONSIVE
+        ========================================= */
+
+        @media (max-width: 1050px) {
+
+            .form-grid {
+
+                grid-template-columns:
+                    repeat(3, 1fr);
+            }
+
+            .dashboard {
+
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+
+        @media (max-width: 700px) {
+
+            .navbar {
+
+                padding: 0 18px;
+            }
+
+            .system-status {
+
+                display: none;
+            }
+
+            .main {
+
+                padding: 25px 15px 45px;
+            }
+
+            .page-heading h1 {
+
+                font-size: 27px;
+            }
+
+            .form-grid {
+
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+
+            #heart-container {
+
+                height: 430px;
+            }
+
+        }
+
+
+        @media (max-width: 480px) {
+
+            .form-grid {
+
+                grid-template-columns: 1fr;
+            }
+
+            .heart-bottom {
+
+                flex-wrap: wrap;
+            }
+
+            #reset-heart {
+
+                margin-left: 0;
+            }
+
+        }
+
+
+        /* PREMIUM VISUAL POLISH */
+        body {
+            background:
+                radial-gradient(ellipse at 48% 38%, rgba(38,105,173,.13), transparent 42%),
+                radial-gradient(circle at 8% 4%, rgba(53,112,205,.18), transparent 28%),
+                radial-gradient(circle at 92% 18%, rgba(130,75,202,.14), transparent 27%),
+                #050b14;
+        }
+        .navbar {
+            background: rgba(5, 12, 23, .9);
+            box-shadow: 0 8px 35px rgba(0,0,0,.18);
+        }
+        .patient-card, .heart-card, .risk-panel {
+            backdrop-filter: blur(16px);
+            border-color: rgba(126, 169, 225, .18);
+            box-shadow: 0 18px 55px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.025);
+        }
+        .heart-card { position: relative; overflow: hidden; }
+        .heart-card::before {
+            content: ""; position: absolute; inset: 0 0 auto; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(91,157,255,.55), rgba(171,111,255,.45), transparent);
+            pointer-events: none;
+        }
+        #heart-container {
+            background:
+                radial-gradient(ellipse at 50% 48%, rgba(42,104,160,.32), transparent 43%),
+                radial-gradient(circle at center, #102943 0%, #091827 52%, #040a12 100%);
+            border: 1px solid rgba(119,164,225,.12);
+            box-shadow: inset 0 0 70px rgba(38,106,176,.12);
+        }
+        #heart-container canvas { filter: drop-shadow(0 0 22px rgba(70,133,255,.16)); }
+        .control-chip { color: #a9c5e9; border-color: rgba(111,158,220,.15); }
+        #toggle-rotation {
+            border: 1px solid rgba(86,148,226,.28); background: rgba(25,58,93,.75);
+            color: #c5dcff; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 11px;
+        }
+        #toggle-rotation:hover { background: rgba(40,83,132,.9); }
+        .page-heading h1 { letter-spacing: -.8px; }
+        #predict-btn { box-shadow: 0 10px 30px rgba(55,115,210,.22), inset 0 1px 0 rgba(255,255,255,.18); }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================================
+         NAVBAR
+    ========================================= -->
+
+    <nav class="navbar">
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                ♥
+            </div>
+
+            <div class="brand-text">
+
+                <strong>CardioVision 3D</strong>
+
+                <span>
+                    AI CARDIAC RISK VISUALIZATION
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="system-status">
+
+            <span class="status-light"></span>
+
+            AI MODEL ACTIVE
+
+        </div>
+
+    </nav>
+
+
+
+    <main class="main">
+
+
+        <!-- =====================================
+             PAGE TITLE
+        ====================================== -->
+
+        <div class="page-heading">
+
+            <div class="eyebrow">
+                CARDIOVASCULAR INTELLIGENCE
+            </div>
+
+            <h1>
+                Cardiac Risk Assessment
+            </h1>
+
+            <p>
+                Enter physiological and clinical measurements
+                to generate AI-assisted coronary artery risk
+                predictions and interactive 3D visualization.
+            </p>
+
+        </div>
+
+
+
+        <!-- =====================================
+             PATIENT INPUT
+        ====================================== -->
+
+        <section class="patient-card">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <h2>
+                        Patient Clinical Profile
+                    </h2>
+
+                    <p>
+                        Provide the available clinical measurements
+                        used by the prediction models.
+                    </p>
+
+                </div>
+
+                <div class="section-number">
+                    01
+                </div>
+
+            </div>
+
+
+            <div class="form-grid">
+
+
+                <!-- DEMOGRAPHICS -->
+
+                <div class="field">
+                    <label>Age</label>
+                    <input id="Age" type="number" value="50">
+                </div>
+
+
+                <div class="field">
+                    <label>Weight</label>
+                    <input id="Weight" type="number" step="0.1" value="70">
+                </div>
+
+
+                <div class="field">
+                    <label>Length</label>
+                    <input id="Length" type="number" step="0.1" value="170">
+                </div>
+
+
+                <div class="field">
+                    <label>Sex</label>
+                    <select id="Sex">
+                        <option value="Male">Male</option>
+                        <option value="Fmale">Female</option>
+                    </select>
+                </div>
+
+
+                <div class="field">
+                    <label>BMI</label>
+                    <input id="BMI" type="number" step="0.1" value="24">
+                </div>
+
+
+                <!-- RISK FACTORS -->
+
+                <div class="field">
+                    <label>Diabetes (DM)</label>
+                    <input id="DM" type="number" value="0">
+                </div>
+
+
+                <div class="field">
+                    <label>Hypertension (HTN)</label>
+                    <input id="HTN" type="number" value="0">
+                </div>
+
+
+                <div class="field">
+                    <label>Current Smoker</label>
+                    <input id="Current Smoker" type="number" value="0">
+                </div>
+
+
+                <div class="field">
+                    <label>Ex-Smoker</label>
+                    <input id="EX-Smoker" type="number" value="0">
+                </div>
+
+
+                <div class="field">
+                    <label>Family History (FH)</label>
+                    <input id="FH" type="number" value="0">
+                </div>
+
+
+                <div class="field">
+                    <label>Obesity</label>
+                    <select id="Obesity">
+                        <option value="N">No</option>
+                        <option value="Y">Yes</option>
+                    </select>
+                </div>
+
+
+                <div class="field">
+                    <label>CRF</label>
+                    <select id="CRF">
+                        <option value="N">No</option>
+                        <option value="Y">Yes</option>
+                    </select>
+                </div>
+
+
+                <div class="field">
+                    <label>CVA</label>
+                    <select id="CVA">
+                        <option value="N">No</option>
+                        <option value="Y">Yes</option>
+                    </select>
+                </div>
+
+
+                <div class="field">
+                    <label>Airway Disease</label>
+                    <select id="Airway disease">
+                        <option value="N">No</option>
+                        <option value="Y">Yes</option>
+                    </select>
+                </div>
+
+
+                <div class="field">
+                    <label>Thyroid Disease</label>
+                    <select id="Thyroid Disease">
+                        <option value="N">No</option>
+                        <option value="Y">Yes</option>
+                    </select>
+                </div>
+
+
+                <div class="field">
+                    <label>CHF</label>
+                    <select id="CHF">
+                        <option value="N">No</option>
+                        <option value="Y">Yes</option>
+                    </select>
+                </div>
+
+
+                <div class="field">
+                    <label>DLP</label>
+                    <select id="DLP">
+                        <option value="N">No</option>
+                        <option value="Y">Yes</option>
+                    </select>
+                </div>
+
+
+                <!-- VITALS -->
+
+                <div class="field">
+                    <label>Blood Pressure</label>
+                    <input id="BP" type="number" value="120">
+                </div>
+
+
+                <div class="field">
+                    <label>Pulse Rate</label>
+                    <input id="PR" type="number" value="75">
+                </div>
+
+
+                <div class="field">
+                    <label>Edema</label>
+                    <input id="Edema" type="number" value="0">
+                </div>
+
+
+                <div class="field">
+                    <label>Weak Peripheral Pulse</label>
+                    <select id="Weak Peripheral Pulse">
+                        <option value="N">No</option>
+                        <option value="Y">Yes</option>
+                    </select>
+                </div>
+
+
+                <div class="field">
+                    <label>Lung Rales</label>
+                    <select id="Lung rales">
+                        <option value="N">No</option>
+                        <option value="Y">Yes</option>
+                    </select>
+                </div>
+
+
+                <div class="field">
+                    <label>Systolic Murmur</label>
+                    <select id="Systolic Murmur">
+                        <option value="N">No</option>
+                        <option value="Y">Yes</option>
+                    </select>
+                </div>
+
+
+                <div class="field">
+                    <label>Diastolic Murmur</label>
+                    <select id="Diastolic Murmur">
+                        <option value="N">No</option>
+                        <option value="Y">Yes</option>
+                    </select>
+                </div>
+
+
+                <!-- SYMPTOMS -->
+
+                <div class="field">
+                    <label>Typical Chest Pain</label>
+                    <input id="Typical Chest Pain" type="number" value="0">
+                </div>
+
+
+                <div class="field">
+                    <label>Dyspnea</label>
+                    <select id="Dyspnea">
+                        <option value="N">No</option>
+                        <option value="Y">Yes</option>
+                    </select>
+                </div>
+
+
+                <div class="field">
+                    <label>Function Class</label>
+                    <input id="Function Class" type="number" value="0">
+                </div>
+
+
+                <div class="field">
+                    <label>Atypical</label>
+                    <select id="Atypical">
+                        <option value="N">No</option>
+                        <option value="Y">Yes</option>
+                    </select>
+                </div>
+
+
+                <div class="field">
+                    <label>Nonanginal</label>
+                    <select id="Nonanginal">
+                        <option value="N">No</option>
+                        <option value="Y">Yes</option>
+                    </select>
+                </div>
+
+
+                <div class="field">
+                    <label>LowTH Ang</label>
+                    <select id="LowTH Ang">
+                        <option value="N">No</option>
+                        <option value="Y">Yes</option>
+                    </select>
+                </div>
+
+
+                <!-- ECG -->
+
+                <div class="field">
+                    <label>Q Wave</label>
+                    <input id="Q Wave" type="number" value="0">
+                </div>
+
+
+                <div class="field">
+                    <label>ST Elevation</label>
+                    <input id="St Elevation" type="number" value="0">
+                </div>
+
+
+                <div class="field">
+                    <label>ST Depression</label>
+                    <input id="St Depression" type="number" value="0">
+                </div>
+
+
+                <div class="field">
+                    <label>T Inversion</label>
+                    <input id="Tinversion" type="number" value="0">
+                </div>
+
+
+                <div class="field">
+                    <label>LVH</label>
+                    <select id="LVH">
+                        <option value="N">No</option>
+                        <option value="Y">Yes</option>
+                    </select>
+                </div>
+
+
+                <div class="field">
+                    <label>Poor R Progression</label>
+                    <select id="Poor R Progression">
+                        <option value="N">No</option>
+                        <option value="Y">Yes</option>
+                    </select>
+                </div>
+
+
+                <div class="field">
+                    <label>BBB</label>
+                    <select id="BBB">
+                        <option value="N">No</option>
+                        <option value="LBBB">LBBB</option>
+                        <option value="RBBB">RBBB</option>
+                    </select>
+                </div>
+
+
+                <!-- LAB -->
+
+                <div class="field">
+                    <label>FBS</label>
+                    <input id="FBS" type="number" step="0.1" value="100">
+                </div>
+
+
+                <div class="field">
+                    <label>Creatinine (CR)</label>
+                    <input id="CR" type="number" step="0.1" value="1">
+                </div>
+
+
+                <div class="field">
+                    <label>Triglycerides (TG)</label>
+                    <input id="TG" type="number" step="0.1" value="150">
+                </div>
+
+
+                <div class="field">
+                    <label>LDL</label>
+                    <input id="LDL" type="number" step="0.1" value="100">
+                </div>
+
+
+                <div class="field">
+                    <label>HDL</label>
+                    <input id="HDL" type="number" step="0.1" value="45">
+                </div>
+
+
+                <div class="field">
+                    <label>BUN</label>
+                    <input id="BUN" type="number" step="0.1" value="15">
+                </div>
+
+
+                <div class="field">
+                    <label>ESR</label>
+                    <input id="ESR" type="number" step="0.1" value="10">
+                </div>
+
+
+                <div class="field">
+                    <label>Hemoglobin (HB)</label>
+                    <input id="HB" type="number" step="0.1" value="14">
+                </div>
+
+
+                <div class="field">
+                    <label>Potassium (K)</label>
+                    <input id="K" type="number" step="0.1" value="4">
+                </div>
+
+
+                <div class="field">
+                    <label>Sodium (Na)</label>
+                    <input id="Na" type="number" step="0.1" value="140">
+                </div>
+
+
+                <div class="field">
+                    <label>WBC</label>
+                    <input id="WBC" type="number" step="0.1" value="7">
+                </div>
+
+
+                <div class="field">
+                    <label>Lymph</label>
+                    <input id="Lymph" type="number" step="0.1" value="30">
+                </div>
+
+
+                <div class="field">
+                    <label>Neut</label>
+                    <input id="Neut" type="number" step="0.1" value="60">
+                </div>
+
+
+                <div class="field">
+                    <label>Platelets (PLT)</label>
+                    <input id="PLT" type="number" step="0.1" value="250">
+                </div>
+
+
+                <!-- ECHO -->
+
+                <div class="field">
+                    <label>EF-TTE</label>
+                    <input id="EF-TTE" type="number" step="0.1" value="60">
+                </div>
+
+
+                <div class="field">
+                    <label>Region RWMA</label>
+                    <input id="Region RWMA" type="number" value="0">
+                </div>
+
+
+                <div class="field">
+                    <label>VHD</label>
+                    <select id="VHD">
+                        <option value="N">Normal</option>
+                        <option value="mild">Mild</option>
+                        <option value="Moderate">Moderate</option>
+                        <option value="Severe">Severe</option>
+                    </select>
+                </div>
+
+            </div>
+
+
+            <div class="predict-row">
+
+                <button id="predict-btn">
+                    ✦ Analyze Cardiac Risk
+                </button>
+
+            </div>
+
+
+            <div id="message"></div>
+
+        </section>
+
+
+
+        <!-- =====================================
+             AI DASHBOARD
+        ====================================== -->
+
+        <section class="dashboard">
+
+
+            <!-- HEART -->
+
+            <div class="heart-card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <h2>
+                            3D Heart Visualization
+                        </h2>
+
+                        <p>
+                            Interactive anatomical model
+                        </p>
+
+                    </div>
+
+                    <div class="view-tag">
+                        WEBGL • 3D
+                    </div>
+
+                </div>
+
+
+                <div id="heart-container">
+
+                    <div
+                        id="heart-loading"
+                        class="heart-loading">
+
+                        <div class="loader-circle"></div>
+
+                        <span>
+                            Loading anatomical model...
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="heart-bottom">
+
+                    <div class="control-chip">
+                        ↻ Drag to rotate
+                    </div>
+
+                    <div class="control-chip">
+                        ⌕ Scroll to zoom
+                    </div>
+
+                    <button id="toggle-rotation" type="button" aria-pressed="true">
+                        ⏸ Pause Rotation
+                    </button>
+
+                    <button id="reset-heart">
+                        Reset View
+                    </button>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- RISK PANEL -->
+
+            <div class="risk-panel">
+
+
+                <div class="risk-title">
+
+                    <div>
+
+                        <p>
+                            AI PREDICTION OUTPUT
+                        </p>
+
+                        <h2>
+                            Cardiac Risk
+                        </h2>
+
+                    </div>
+
+                    <div class="ai-badge">
+                        ✦
+                    </div>
+
+                </div>
+
+
+                <!-- CAD -->
+
+                <div class="cad-box">
+
+                    <div class="cad-label">
+
+                        <span>
+                            Overall CAD Risk
+                        </span>
+
+                        <span>
+                            ● AI
+                        </span>
+
+                    </div>
+
+
+                    <div class="cad-value">
+
+                        <span id="cad-value">
+                            --.-- 
+                        </span>
+
+                        <small>%</small>
+
+                    </div>
+
+
+                    <div class="progress">
+
+                        <div
+                            id="cad-bar"
+                            class="progress-bar">
+                        </div>
+
+                    </div>
+
+
+                    <span class="cad-description">
+                        Predicted probability of coronary
+                        artery disease.
+                    </span>
+
+                </div>
+
+
+
+                <!-- VESSELS -->
+
+                <div class="sub-title">
+                    Coronary Artery Assessment
+                </div>
+
+
+                <div class="vessel-list">
+
+
+                    <!-- LAD -->
+
+                    <div class="vessel">
+
+                        <div class="vessel-top">
+
+                            <div class="vessel-name">
+
+                                <span
+                                    class="vessel-dot lad-dot">
+                                </span>
+
+                                LAD
+
+                            </div>
+
+                            <div
+                                id="lad-value"
+                                class="vessel-value">
+
+                                --.--%
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="vessel-bar">
+
+                            <div
+                                id="lad-bar"
+                                class="vessel-fill lad-fill">
+                            </div>
+
+                        </div>
+
+
+                        <span class="vessel-caption">
+                            Left Anterior Descending
+                            stenosis probability
+                        </span>
+
+                    </div>
+
+
+
+                    <!-- LCX -->
+
+                    <div class="vessel">
+
+                        <div class="vessel-top">
+
+                            <div class="vessel-name">
+
+                                <span
+                                    class="vessel-dot lcx-dot">
+                                </span>
+
+                                LCX
+
+                            </div>
+
+                            <div
+                                id="lcx-value"
+                                class="vessel-value">
+
+                                --.--%
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="vessel-bar">
+
+                            <div
+                                id="lcx-bar"
+                                class="vessel-fill lcx-fill">
+                            </div>
+
+                        </div>
+
+
+                        <span class="vessel-caption">
+                            Left Circumflex
+                            stenosis probability
+                        </span>
+
+                    </div>
+
+
+
+                    <!-- RCA -->
+
+                    <div class="vessel">
+
+                        <div class="vessel-top">
+
+                            <div class="vessel-name">
+
+                                <span
+                                    class="vessel-dot rca-dot">
+                                </span>
+
+                                RCA
+
+                            </div>
+
+                            <div
+                                id="rca-value"
+                                class="vessel-value">
+
+                                --.--%
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="vessel-bar">
+
+                            <div
+                                id="rca-bar"
+                                class="vessel-fill rca-fill">
+                            </div>
+
+                        </div>
+
+
+                        <span class="vessel-caption">
+                            Right Coronary Artery
+                            stenosis probability
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- MODEL INFO -->
+
+                <div class="model-info">
+
+                    <div class="info-box">
+
+                        <span>MODEL</span>
+
+                        <strong>
+                            Random Forest
+                        </strong>
+
+                    </div>
+
+
+                    <div class="info-box">
+
+                        <span>FEATURES</span>
+
+                        <strong>
+                            Clinical + ECG + Lab
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =====================================
+             DISCLAIMER
+        ====================================== -->
+
+        <div class="disclaimer">
+
+            <div class="warning">
+                ⚠
+            </div>
+
+            <div>
+
+                <strong>
+                    Research Use Only
+                </strong>
+
+                <p>
+                    This application provides
+                    research-oriented predictions based
+                    on clinical data. It is not a medical
+                    diagnosis and should not replace
+                    professional medical advice.
+                </p>
+
+            </div>
+
+        </div>
+
+
+    </main>
+
+
+
+    <!-- =========================================
+         THREE.JS + APPLICATION JAVASCRIPT
+    ========================================= -->
+
+    <script type="module">
+
+        import * as THREE from "three";
+
+        import {
+            OrbitControls
+        } from "three/addons/controls/OrbitControls.js";
+
+        import {
+            GLTFLoader
+        } from "three/addons/loaders/GLTFLoader.js";
+
+
+        /* ========================================
+           HEART SETUP
+        ======================================== */
+
+        const container =
+            document.getElementById(
+                "heart-container"
+            );
+
+        const loading =
+            document.getElementById(
+                "heart-loading"
+            );
+
+
+        const scene =
+            new THREE.Scene();
+
+
+        scene.background =
+            new THREE.Color(0x081321);
+
+
+        const camera =
+            new THREE.PerspectiveCamera(
+                45,
+                container.clientWidth /
+                container.clientHeight,
+                0.01,
+                1000
+            );
+
+
+        camera.position.set(
+            0,
+            0,
+            3
+        );
+
+
+        const renderer =
+            new THREE.WebGLRenderer({
+                antialias: true,
+                alpha: false
+            });
+
+
+        renderer.setSize(
+            container.clientWidth,
+            container.clientHeight
+        );
+
+
+        renderer.setPixelRatio(
+            Math.min(
+                window.devicePixelRatio,
+                1.5
+            )
+        );
+
+
+        container.appendChild(
+            renderer.domElement
+        );
+
+
+        /* LIGHTS */
+
+        const ambient =
+            new THREE.AmbientLight(
+                0xffffff,
+                2.2
+            );
+
+        scene.add(ambient);
+
+
+        const keyLight =
+            new THREE.DirectionalLight(
+                0xffffff,
+                3
+            );
+
+        keyLight.position.set(
+            3,
+            4,
+            5
+        );
+
+        scene.add(keyLight);
+
+
+        const fillLight =
+            new THREE.DirectionalLight(
+                0x6699ff,
+                1.2
+            );
+
+        fillLight.position.set(
+            -4,
+            1,
+            3
+        );
+
+        scene.add(fillLight);
+
+
+        /* CONTROLS */
+
+        const controls =
+            new OrbitControls(
+                camera,
+                renderer.domElement
+            );
+
+
+        controls.enableDamping = true;
+
+        controls.dampingFactor = 0.06;
+
+        // Gentle automatic rotation; mouse/touch interaction remains enabled.
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.55;
+
+        controls.enablePan = false;
+
+        controls.minDistance = 0.7;
+
+        controls.maxDistance = 8;
+
+
+        /* HEART MODEL */
+
+        const loader =
+            new GLTFLoader();
+
+
+        let heartModel = null;
+
+        let originalCameraPosition =
+            new THREE.Vector3(
+                0,
+                0,
+                3
+            );
+
+
+        loader.load(
+
+            "/anatomy/heart.glb",
+
+            function (gltf) {
+
+                heartModel =
+                    gltf.scene;
+
+
+                scene.add(
+                    heartModel
+                );
+
+
+                /* FIND MODEL BOUNDS */
+
+                const box =
+                    new THREE.Box3()
+                    .setFromObject(
+                        heartModel
+                    );
+
+
+                const center =
+                    box.getCenter(
+                        new THREE.Vector3()
+                    );
+
+
+                const size =
+                    box.getSize(
+                        new THREE.Vector3()
+                    );
+
+
+                /* CENTER */
+
+                heartModel.position.sub(
+                    center
+                );
+
+
+                const maxSize =
+                    Math.max(
+                        size.x,
+                        size.y,
+                        size.z
+                    );
+
+
+                const scale =
+                    2.1 / maxSize;
+
+
+                heartModel.scale.set(
+                    scale,
+                    scale,
+                    scale
+                );
+
+
+                /* CAMERA */
+
+                camera.position.set(
+                    0,
+                    0,
+                    3
+                );
+
+
+                originalCameraPosition.copy(
+                    camera.position
+                );
+
+
+                controls.target.set(
+                    0,
+                    0,
+                    0
+                );
+
+
+                controls.update();
+
+
+                loading.style.display =
+                    "none";
+
+
+                console.log(
+                    "CardioVision 3D heart loaded."
+                );
+
+            },
+
+
+            undefined,
+
+
+            function (error) {
+
+                console.error(
+                    "Heart model error:",
+                    error
+                );
+
+
+                loading.innerHTML = `
+                    <span style="
+                        color:#ff8295;
+                        font-size:12px;
+                    ">
+                        Heart model could not be loaded.
+                    </span>
+                `;
+
+            }
+
+        );
+
+
+        /* ANIMATION */
+
+        function animate() {
+
+            requestAnimationFrame(
+                animate
+            );
+
+
+            controls.update();
+
+
+            renderer.render(
+                scene,
+                camera
+            );
+
+        }
+
+
+        animate();
+
+
+        /* RESIZE */
+
+        window.addEventListener(
+            "resize",
+            function () {
+
+                camera.aspect =
+                    container.clientWidth /
+                    container.clientHeight;
+
+
+                camera.updateProjectionMatrix();
+
+
+                renderer.setSize(
+                    container.clientWidth,
+                    container.clientHeight
+                );
+
+            }
+        );
+
+
+        /* AUTOMATIC ROTATION TOGGLE */
+
+        const rotationButton = document.getElementById("toggle-rotation");
+        rotationButton.addEventListener("click", function () {
+            controls.autoRotate = !controls.autoRotate;
+            rotationButton.textContent = controls.autoRotate ? "⏸ Pause Rotation" : "▶ Resume Rotation";
+            rotationButton.setAttribute("aria-pressed", String(controls.autoRotate));
+        });
+
+
+        /* RESET */
+
+        document
+            .getElementById(
+                "reset-heart"
+            )
+            .addEventListener(
+                "click",
+                function () {
+
+                    camera.position.copy(
+                        originalCameraPosition
+                    );
+
+                    controls.target.set(
+                        0,
+                        0,
+                        0
+                    );
+
+                    controls.update();
+
+                }
+            );
+
+
+
+        /* ========================================
+           PREDICTION
+        ======================================== */
+
+        const predictButton =
+            document.getElementById(
+                "predict-btn"
+            );
+
+
+        const message =
+            document.getElementById(
+                "message"
+            );
+
+
+        function getNumber(id) {
+
+            return Number(
+                document.getElementById(id).value
+            );
+
+        }
+
+
+        function getText(id) {
+
+            return document.getElementById(id).value;
+
+        }
+
+
+        predictButton.addEventListener(
+            "click",
+            async function () {
+
+
+                predictButton.disabled =
+                    true;
+
+                predictButton.textContent =
+                    "Analyzing...";
+
+
+                message.className = "";
+
+                message.style.display =
+                    "none";
+
+
+                try {
+
+
+                    /* ========================
+                       PATIENT DATA
+                    ======================== */
+
+                    const data = {
+
+
+                        Age:
+                            getNumber("Age"),
+
+                        Weight:
+                            getNumber("Weight"),
+
+                        Length:
+                            getNumber("Length"),
+
+                        Sex:
+                            getText("Sex"),
+
+                        BMI:
+                            getNumber("BMI"),
+
+
+                        DM:
+                            getNumber("DM"),
+
+                        HTN:
+                            getNumber("HTN"),
+
+                        "Current Smoker":
+                            getNumber(
+                                "Current Smoker"
+                            ),
+
+                        "EX-Smoker":
+                            getNumber(
+                                "EX-Smoker"
+                            ),
+
+                        FH:
+                            getNumber("FH"),
+
+
+                        Obesity:
+                            getText("Obesity"),
+
+                        CRF:
+                            getText("CRF"),
+
+                        CVA:
+                            getText("CVA"),
+
+                        "Airway disease":
+                            getText(
+                                "Airway disease"
+                            ),
+
+                        "Thyroid Disease":
+                            getText(
+                                "Thyroid Disease"
+                            ),
+
+                        CHF:
+                            getText("CHF"),
+
+                        DLP:
+                            getText("DLP"),
+
+
+                        BP:
+                            getNumber("BP"),
+
+                        PR:
+                            getNumber("PR"),
+
+                        Edema:
+                            getNumber("Edema"),
+
+
+                        "Weak Peripheral Pulse":
+                            getText(
+                                "Weak Peripheral Pulse"
+                            ),
+
+                        "Lung rales":
+                            getText(
+                                "Lung rales"
+                            ),
+
+                        "Systolic Murmur":
+                            getText(
+                                "Systolic Murmur"
+                            ),
+
+                        "Diastolic Murmur":
+                            getText(
+                                "Diastolic Murmur"
+                            ),
+
+
+                        "Typical Chest Pain":
+                            getNumber(
+                                "Typical Chest Pain"
+                            ),
+
+                        Dyspnea:
+                            getText("Dyspnea"),
+
+                        "Function Class":
+                            getNumber(
+                                "Function Class"
+                            ),
+
+                        Atypical:
+                            getText("Atypical"),
+
+                        Nonanginal:
+                            getText("Nonanginal"),
+
+                        "LowTH Ang":
+                            getText("LowTH Ang"),
+
+
+                        "Q Wave":
+                            getNumber("Q Wave"),
+
+                        "St Elevation":
+                            getNumber(
+                                "St Elevation"
+                            ),
+
+                        "St Depression":
+                            getNumber(
+                                "St Depression"
+                            ),
+
+                        Tinversion:
+                            getNumber(
+                                "Tinversion"
+                            ),
+
+                        LVH:
+                            getText("LVH"),
+
+                        "Poor R Progression":
+                            getText(
+                                "Poor R Progression"
+                            ),
+
+                        BBB:
+                            getText("BBB"),
+
+
+                        FBS:
+                            getNumber("FBS"),
+
+                        CR:
+                            getNumber("CR"),
+
+                        TG:
+                            getNumber("TG"),
+
+                        LDL:
+                            getNumber("LDL"),
+
+                        HDL:
+                            getNumber("HDL"),
+
+                        BUN:
+                            getNumber("BUN"),
+
+                        ESR:
+                            getNumber("ESR"),
+
+                        HB:
+                            getNumber("HB"),
+
+                        K:
+                            getNumber("K"),
+
+                        Na:
+                            getNumber("Na"),
+
+                        WBC:
+                            getNumber("WBC"),
+
+                        Lymph:
+                            getNumber("Lymph"),
+
+                        Neut:
+                            getNumber("Neut"),
+
+                        PLT:
+                            getNumber("PLT"),
+
+
+                        "EF-TTE":
+                            getNumber("EF-TTE"),
+
+                        "Region RWMA":
+                            getNumber(
+                                "Region RWMA"
+                            ),
+
+                        VHD:
+                            getText("VHD")
+
+                    };
+
+
+                    /* ========================
+                       API CALL
+                    ======================== */
+
+                    const response =
+                        await fetch(
+                            "http://127.0.0.1:5000/predict",
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body:
+                                    JSON.stringify(data)
+                            }
+                        );
+
+
+                    const result =
+                        await response.json();
+
+
+                    if (
+                        result.status !==
+                        "success"
+                    ) {
+
+                        throw new Error(
+                            result.message ||
+                            "Prediction failed."
+                        );
+
+                    }
+
+
+                    /* ========================
+                       RESULTS
+                    ======================== */
+
+                    const p =
+                        result.predictions;
+
+
+                    const cad =
+                        p.CAD * 100;
+
+                    const lad =
+                        p.LAD * 100;
+
+                    const lcx =
+                        p.LCX * 100;
+
+                    const rca =
+                        p.RCA * 100;
+
+
+                    /* CAD */
+
+                    document
+                        .getElementById(
+                            "cad-value"
+                        )
+                        .textContent =
+                        cad.toFixed(2);
+
+
+                    document
+                        .getElementById(
+                            "cad-bar"
+                        )
+                        .style.width =
+                        cad + "%";
+
+
+                    /* LAD */
+
+                    document
+                        .getElementById(
+                            "lad-value"
+                        )
+                        .textContent =
+                        lad.toFixed(2) + "%";
+
+
+                    document
+                        .getElementById(
+                            "lad-bar"
+                        )
+                        .style.width =
+                        lad + "%";
+
+
+                    /* LCX */
+
+                    document
+                        .getElementById(
+                            "lcx-value"
+                        )
+                        .textContent =
+                        lcx.toFixed(2) + "%";
+
+
+                    document
+                        .getElementById(
+                            "lcx-bar"
+                        )
+                        .style.width =
+                        lcx + "%";
+
+
+                    /* RCA */
+
+                    document
+                        .getElementById(
+                            "rca-value"
+                        )
+                        .textContent =
+                        rca.toFixed(2) + "%";
+
+
+                    document
+                        .getElementById(
+                            "rca-bar"
+                        )
+                        .style.width =
+                        rca + "%";
+
+
+                    /* SUCCESS */
+
+                    message.textContent =
+                        "✓ Cardiac risk analysis completed successfully.";
+
+                    message.className =
+                        "message-success";
+
+
+                    message.style.display =
+                        "block";
+
+
+                    /* SCROLL */
+
+                    document
+                        .querySelector(
+                            ".dashboard"
+                        )
+                        .scrollIntoView({
+                            behavior: "smooth"
+                        });
+
+
+                }
+
+                catch (error) {
+
+                    console.error(
+                        error
+                    );
+
+
+                    message.textContent =
+                        "Prediction error: " +
+                        error.message;
+
+
+                    message.className =
+                        "message-error";
+
+
+                    message.style.display =
+                        "block";
+
+                }
+
+
+                finally {
+
+                    predictButton.disabled =
+                        false;
+
+                    predictButton.textContent =
+                        "✦ Analyze Cardiac Risk";
+
+                }
+
+            }
+
+        );
+
+    </script>
+
+
+</body>
+
+</html>
