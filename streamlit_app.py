@@ -9,11 +9,18 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
+import textwrap
+
+# ============================================================
+# CARDIOVISION3D CONFIGURATION
+# ============================================================
 
 ROOT = Path(__file__).resolve().parent
+
 MODEL_PATH = ROOT / "models" / "cardiovision_model.joblib"
 FEATURES_PATH = ROOT / "models" / "feature_columns.json"
 METRICS_PATH = ROOT / "models" / "metrics.json"
+LOGO_PATH = ROOT / "logo.png"
 
 HEART_URL = (
     "https://raw.githubusercontent.com/"
@@ -26,102 +33,212 @@ st.set_page_config(
     layout="wide",
 )
 
-st.markdown("""
-<style>
-.stApp {
-    background: radial-gradient(ellipse at 50% 0%, #10233b 0%, transparent 45%), #060d17;
-    color: #eaf2ff;
+
+# ============================================================
+# DARK THEME STYLING
+# ============================================================
+
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background:
+            radial-gradient(
+                ellipse at 50% 0%,
+                #10233b 0%,
+                transparent 45%
+            ),
+            #060d17;
+        color: #eaf2ff;
+    }
+
+    .block-container {
+        max-width: 1450px;
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+    }
+
+    h1, h2, h3 {
+        color: #ecf4ff !important;
+    }
+
+    .hero {
+        padding: 16px 0 26px;
+    }
+
+    .eyebrow {
+        color: #78cfff;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2.5px;
+        margin-bottom: 10px;
+    }
+
+    .subtitle {
+        color: #a1b4cc;
+        font-size: 14px;
+        line-height: 1.7;
+        max-width: 800px;
+    }
+
+    div[data-testid="stMetric"] {
+        background: #0b192a;
+        border: 1px solid #223952;
+        border-radius: 14px;
+        padding: 16px;
+    }
+
+    .stButton button,
+    .stFormSubmitButton button {
+        border-radius: 10px;
+        font-weight: 700;
+        min-height: 44px;
+    }
+
+    .footnote {
+        color: #a0b0c4;
+        font-size: 12px;
+        line-height: 1.7;
+    }
+
+    div[data-testid="stExpander"] {
+        border: 1px solid #223952;
+        border-radius: 12px;
+    }
+
+    [data-testid="stImage"] img {
+        border-radius: 8px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+# ============================================================
+# MODEL INPUT FEATURES
+# ============================================================
+
+NUMERIC_COLUMNS_DEFAULT = {
+    "Age",
+    "Weight",
+    "Length",
+    "BMI",
+    "DM",
+    "HTN",
+    "Current Smoker",
+    "EX-Smoker",
+    "FH",
+    "BP",
+    "PR",
+    "Edema",
+    "Typical Chest Pain",
+    "Function Class",
+    "Q Wave",
+    "St Elevation",
+    "St Depression",
+    "Tinversion",
+    "FBS",
+    "CR",
+    "TG",
+    "LDL",
+    "HDL",
+    "BUN",
+    "ESR",
+    "HB",
+    "K",
+    "Na",
+    "WBC",
+    "Lymph",
+    "Neut",
+    "PLT",
+    "EF-TTE",
+    "Region RWMA",
 }
-.block-container {
-    max-width: 1450px;
-    padding-top: 2rem;
-    padding-bottom: 3rem;
-}
-h1, h2, h3 {
-    color: #ecf4ff !important;
-}
-.hero {
-    padding: 16px 0 26px;
-}
-.eyebrow {
-    color: #78aaff;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2.5px;
-    margin-bottom: 10px;
-}
-.subtitle {
-    color: #8ba0bb;
-    font-size: 14px;
-    line-height: 1.7;
-    max-width: 800px;
-}
-div[data-testid="stMetric"] {
-    background: #0b192a;
-    border: 1px solid #223952;
-    border-radius: 14px;
-    padding: 16px;
-}
-.stButton button, .stFormSubmitButton button {
-    border-radius: 10px;
-    font-weight: 700;
-    min-height: 44px;
-}
-.footnote {
-    color: #8b9db4;
-    font-size: 12px;
-    line-height: 1.7;
-}
-</style>
-""", unsafe_allow_html=True)
 
 
 # ============================================================
 # FORM SECTIONS
 # ============================================================
 
-NUMERIC_COLUMNS_DEFAULT = {
-    "Age", "Weight", "Length", "BMI", "DM", "HTN",
-    "Current Smoker", "EX-Smoker", "FH", "BP", "PR",
-    "Edema", "Typical Chest Pain", "Function Class",
-    "Q Wave", "St Elevation", "St Depression", "Tinversion",
-    "FBS", "CR", "TG", "LDL", "HDL", "BUN", "ESR",
-    "HB", "K", "Na", "WBC", "Lymph", "Neut", "PLT",
-    "EF-TTE", "Region RWMA"
-}
-
 GROUPS = {
     "Patient Demographics": [
-        "Age", "Weight", "Length", "Sex", "BMI"
+        "Age",
+        "Weight",
+        "Length",
+        "Sex",
+        "BMI",
     ],
+
     "Medical History": [
-        "DM", "HTN", "Current Smoker", "EX-Smoker", "FH",
-        "Obesity", "CRF", "CVA", "Airway disease",
-        "Thyroid Disease", "CHF", "DLP"
+        "DM",
+        "HTN",
+        "Current Smoker",
+        "EX-Smoker",
+        "FH",
+        "Obesity",
+        "CRF",
+        "CVA",
+        "Airway disease",
+        "Thyroid Disease",
+        "CHF",
+        "DLP",
     ],
+
     "Vitals and Clinical Findings": [
-        "BP", "PR", "Edema", "Weak Peripheral Pulse",
-        "Lung rales", "Systolic Murmur", "Diastolic Murmur",
-        "Typical Chest Pain", "Dyspnea", "Function Class",
-        "Atypical", "Nonanginal", "Exertional CP", "LowTH Ang"
+        "BP",
+        "PR",
+        "Edema",
+        "Weak Peripheral Pulse",
+        "Lung rales",
+        "Systolic Murmur",
+        "Diastolic Murmur",
+        "Typical Chest Pain",
+        "Dyspnea",
+        "Function Class",
+        "Atypical",
+        "Nonanginal",
+        "Exertional CP",
+        "LowTH Ang",
     ],
+
     "ECG Findings": [
-        "Q Wave", "St Elevation", "St Depression",
-        "Tinversion", "LVH", "Poor R Progression", "BBB"
+        "Q Wave",
+        "St Elevation",
+        "St Depression",
+        "Tinversion",
+        "LVH",
+        "Poor R Progression",
+        "BBB",
     ],
+
     "Laboratory Results": [
-        "FBS", "CR", "TG", "LDL", "HDL", "BUN",
-        "ESR", "HB", "K", "Na", "WBC", "Lymph",
-        "Neut", "PLT"
+        "FBS",
+        "CR",
+        "TG",
+        "LDL",
+        "HDL",
+        "BUN",
+        "ESR",
+        "HB",
+        "K",
+        "Na",
+        "WBC",
+        "Lymph",
+        "Neut",
+        "PLT",
     ],
+
     "Echocardiography": [
-        "EF-TTE", "Region RWMA", "VHD"
+        "EF-TTE",
+        "Region RWMA",
+        "VHD",
     ],
 }
 
 
 # ============================================================
-# LOAD THE EXISTING TRAINED MODEL
+# LOAD MODEL AND FEATURE SCHEMA
 # ============================================================
 
 @st.cache_resource
@@ -138,16 +255,21 @@ def load_artifacts():
 
     model = joblib.load(MODEL_PATH)
 
-    with FEATURES_PATH.open("r", encoding="utf-8") as file:
+    with FEATURES_PATH.open(
+        "r",
+        encoding="utf-8",
+    ) as file:
         features = json.load(file)
 
     if not isinstance(features, list):
         raise ValueError(
-            "feature_columns.json must contain a list of feature names."
+            "feature_columns.json must contain a list."
         )
 
-    if not all(isinstance(item, str) for item in features):
-        raise ValueError("All feature names must be strings.")
+    if not all(isinstance(name, str) for name in features):
+        raise ValueError(
+            "All feature names must be strings."
+        )
 
     if len(features) != 55:
         raise ValueError(
@@ -158,10 +280,9 @@ def load_artifacts():
 
     if METRICS_PATH.exists():
         try:
-            with METRICS_PATH.open(
-                "r", encoding="utf-8"
-            ) as file:
-                metrics = json.load(file)
+            metrics = json.loads(
+                METRICS_PATH.read_text(encoding="utf-8")
+            )
         except (OSError, json.JSONDecodeError):
             metrics = {}
 
@@ -171,8 +292,8 @@ def load_artifacts():
 def as_estimator_map(model):
     if not isinstance(model, dict):
         raise TypeError(
-            "The saved model must contain a dictionary of trained "
-            "CAD, LAD, LCX and RCA estimators."
+            "The saved model must contain a dictionary of "
+            "trained CAD, LAD, LCX and RCA estimators."
         )
 
     result = {
@@ -184,24 +305,36 @@ def as_estimator_map(model):
         result["CAD"] = result["CATH"]
 
     missing = [
-        key for key in ("CAD", "LAD", "LCX", "RCA")
+        key
+        for key in ("CAD", "LAD", "LCX", "RCA")
         if key not in result
     ]
 
     if missing:
         raise ValueError(
-            "Missing model estimator(s): " + ", ".join(missing)
+            "Missing model estimator(s): "
+            + ", ".join(missing)
         )
 
     return result
 
 
 def find_column_transformer(estimator):
-    for step in getattr(estimator, "named_steps", {}).values():
+    for step in getattr(
+        estimator,
+        "named_steps",
+        {},
+    ).values():
+
         if hasattr(step, "transformers_"):
             return step
 
-        for nested in getattr(step, "named_steps", {}).values():
+        for nested in getattr(
+            step,
+            "named_steps",
+            {},
+        ).values():
+
             if hasattr(nested, "transformers_"):
                 return nested
 
@@ -212,8 +345,14 @@ def find_encoder(obj):
     if hasattr(obj, "categories_"):
         return obj
 
-    for step in getattr(obj, "named_steps", {}).values():
+    for step in getattr(
+        obj,
+        "named_steps",
+        {},
+    ).values():
+
         encoder = find_encoder(step)
+
         if encoder is not None:
             return encoder
 
@@ -222,6 +361,7 @@ def find_encoder(obj):
 
 def get_types_and_options(model, features):
     estimators = as_estimator_map(model)
+
     numeric = set()
     categorical = set()
     options = {}
@@ -232,27 +372,39 @@ def get_types_and_options(model, features):
         if transformer is None:
             continue
 
-        for name, fitted_transformer, columns in transformer.transformers_:
+        for name, fitted, columns in transformer.transformers_:
+
             if isinstance(columns, str):
                 columns = [columns]
+
             elif not isinstance(
-                columns, (list, tuple, np.ndarray, pd.Index)
+                columns,
+                (list, tuple, np.ndarray, pd.Index),
             ):
                 continue
 
             columns = [str(column) for column in columns]
             label = str(name).lower()
 
-            if label in {"num", "numeric", "numerical"}:
+            if label in {
+                "num",
+                "numeric",
+                "numerical",
+            }:
                 numeric.update(columns)
 
-            elif label in {"cat", "categorical"}:
+            elif label in {
+                "cat",
+                "categorical",
+            }:
                 categorical.update(columns)
-                encoder = find_encoder(fitted_transformer)
+
+                encoder = find_encoder(fitted)
 
                 if encoder is not None:
                     for column, values in zip(
-                        columns, encoder.categories_
+                        columns,
+                        encoder.categories_,
                     ):
                         cleaned = []
 
@@ -290,7 +442,7 @@ def get_types_and_options(model, features):
 
 
 # ============================================================
-# PROBABILITY HELPERS
+# POSITIVE CLASS PROBABILITY
 # ============================================================
 
 def positive_probability(estimator, row, target):
@@ -299,7 +451,10 @@ def positive_probability(estimator, row, target):
             f"The {target} model has no predict_proba method."
         )
 
-    probabilities = np.asarray(estimator.predict_proba(row))[0]
+    probabilities = np.asarray(
+        estimator.predict_proba(row)
+    )[0]
+
     classes = getattr(estimator, "classes_", None)
 
     if classes is None or len(classes) != len(probabilities):
@@ -307,47 +462,78 @@ def positive_probability(estimator, row, target):
             f"Could not read class labels for {target}."
         )
 
-    labels = [str(value).strip().lower() for value in classes]
+    labels = [
+        str(value).strip().lower()
+        for value in classes
+    ]
 
-    if target.upper() == "CAD":
-        positives = {
-            "cad", "1", "yes", "true", "positive", "disease"
+    if target == "CAD":
+        positive_labels = {
+            "cad",
+            "1",
+            "yes",
+            "true",
+            "positive",
+            "disease",
         }
     else:
-        positives = {
-            "stenotic", "stenosis", "1", "yes",
-            "true", "positive", "disease"
+        positive_labels = {
+            "stenotic",
+            "stenosis",
+            "1",
+            "yes",
+            "true",
+            "positive",
+            "disease",
         }
 
     index = next(
-        (i for i, label in enumerate(labels) if label in positives),
+        (
+            i
+            for i, label in enumerate(labels)
+            if label in positive_labels
+        ),
         None,
     )
 
     if index is None:
-        negatives = {
-            "normal", "0", "no", "false", "negative",
-            "non-cad", "nonstenotic"
+        negative_labels = {
+            "normal",
+            "0",
+            "no",
+            "false",
+            "negative",
+            "non-cad",
+            "nonstenotic",
         }
 
         negative_index = next(
-            (i for i, label in enumerate(labels) if label in negatives),
+            (
+                i
+                for i, label in enumerate(labels)
+                if label in negative_labels
+            ),
             None,
         )
 
         if negative_index is not None and len(labels) == 2:
             index = 1 - negative_index
+
         elif len(labels) == 2:
             index = 1
+
         else:
             raise ValueError(
-                f"Could not identify positive class for {target}: {classes}"
+                f"Could not identify positive class for {target}: "
+                f"{classes}"
             )
 
     probability = float(probabilities[index])
 
     if not math.isfinite(probability):
-        raise ValueError(f"Invalid probability for {target}.")
+        raise ValueError(
+            f"Invalid probability for {target}."
+        )
 
     return max(0.0, min(1.0, probability))
 
@@ -366,23 +552,44 @@ def display_label(value):
 
 
 # ============================================================
-# PAGE HEADER
+# HEADER — GENERATED DARK MODE LOGO
 # ============================================================
 
-st.markdown("""
-<div class="hero">
-    <div class="eyebrow">CARDIOVASCULAR INTELLIGENCE</div>
-    <h1 style="font-size:38px;margin-bottom:10px;">
-        ❤️ CardioVision3D
-    </h1>
-    <div class="subtitle">
-        AI-assisted cardiac risk prediction with an interactive
-        3D heart model. Enter the clinical information you have;
-        unavailable measurements can remain blank.
-    </div>
-</div>
-""", unsafe_allow_html=True)
+logo_col, intro_col = st.columns(
+    [1, 2.5],
+    gap="large",
+    vertical_alignment="center",
+)
 
+with logo_col:
+    if LOGO_PATH.exists():
+        st.image(
+            str(LOGO_PATH),
+            width=310,
+        )
+    else:
+        st.warning(
+            "Logo not found. Save the downloaded image as "
+            "logo.png in the same folder as streamlit_app.py."
+        )
+
+with intro_col:
+    st.markdown(
+        textwrap.dedent("""\
+        <div class="hero">
+          <div class="eyebrow">CARDIOVASCULAR INTELLIGENCE</div>
+          <h1 style="font-size:38px; margin-bottom:10px;">
+            Cardiac Risk Assessment
+          </h1>
+          <div class="subtitle">
+            AI-assisted estimates for overall coronary artery disease
+            and LAD, LCX, and RCA stenosis, paired with an interactive
+            3D heart visualization.
+          </div>
+        </div>
+        """),
+        unsafe_allow_html=True,
+    )
 
 # ============================================================
 # INITIALIZE MODEL
@@ -392,40 +599,49 @@ try:
     model, feature_columns, saved_metrics = load_artifacts()
 
     numeric_cols, categorical_cols, category_options = (
-        get_types_and_options(model, feature_columns)
+        get_types_and_options(
+            model,
+            feature_columns,
+        )
     )
 
     estimator_map = as_estimator_map(model)
 
-except Exception as error:
-    st.error(f"Could not load the model: {error}")
+except Exception as exc:
+    st.error(f"Could not load the model: {exc}")
+
     st.info(
-        "Check that models/cardiovision_model.joblib and "
-        "models/feature_columns.json exist and that the saved model "
+        "Confirm that models/cardiovision_model.joblib and "
+        "models/feature_columns.json exist, and that the saved model "
         "contains fitted CAD, LAD, LCX and RCA estimators."
     )
+
     st.stop()
 
 
 # ============================================================
-# PATIENT FORM
+# PATIENT INPUT FORM
 # ============================================================
 
 st.markdown("## Patient Clinical Profile")
 
 st.caption(
     "All 55 trained features are retained. Fill only the information "
-    "you have. Blank values are treated as missing values, not zero or No."
+    "you have. Blank fields are treated as missing values, not zero or No."
 )
 
 inputs = {}
 
-with st.form("cardiovision_patient_form", clear_on_submit=False):
+with st.form(
+    "cardiovision_patient_form",
+    clear_on_submit=False,
+):
     shown = set()
 
     for group, group_features in GROUPS.items():
         fields = [
-            name for name in group_features
+            name
+            for name in group_features
             if name in feature_columns
         ]
 
@@ -434,7 +650,7 @@ with st.form("cardiovision_patient_form", clear_on_submit=False):
 
         with st.expander(
             group,
-            expanded=(group == "Patient Demographics")
+            expanded=(group == "Patient Demographics"),
         ):
             columns = st.columns(3)
 
@@ -449,6 +665,7 @@ with st.form("cardiovision_patient_form", clear_on_submit=False):
                             placeholder="Optional — leave blank",
                             key=f"field_{name}",
                         )
+
                     else:
                         values = category_options.get(name, [])
 
@@ -461,7 +678,9 @@ with st.form("cardiovision_patient_form", clear_on_submit=False):
                         )
 
     remaining = [
-        name for name in feature_columns if name not in shown
+        name
+        for name in feature_columns
+        if name not in shown
     ]
 
     if remaining:
@@ -477,6 +696,7 @@ with st.form("cardiovision_patient_form", clear_on_submit=False):
                             placeholder="Optional — leave blank",
                             key=f"field_{name}",
                         )
+
                     else:
                         values = category_options.get(name, [])
 
@@ -501,7 +721,7 @@ with st.form("cardiovision_patient_form", clear_on_submit=False):
 
 
 # ============================================================
-# RUN ML PREDICTION
+# RUN PREDICTION
 # ============================================================
 
 if submitted:
@@ -519,10 +739,11 @@ if submitted:
             elif name in numeric_cols:
                 try:
                     number = float(value)
-                except (TypeError, ValueError) as error:
+
+                except (TypeError, ValueError) as exc:
                     raise ValueError(
                         f"{name} must be a number or left blank."
-                    ) from error
+                    ) from exc
 
                 if not math.isfinite(number):
                     raise ValueError(
@@ -534,7 +755,10 @@ if submitted:
             else:
                 row[name] = value
 
-        if all(pd.isna(value) for value in row.values()):
+        if all(
+            pd.isna(value)
+            for value in row.values()
+        ):
             raise ValueError(
                 "Enter at least one available clinical value."
             )
@@ -555,16 +779,21 @@ if submitted:
 
         st.session_state["cardiovision_results"] = results
 
-    except Exception as error:
-        st.session_state.pop("cardiovision_results", None)
-        st.error(f"Prediction failed: {error}")
+    except Exception as exc:
+        st.session_state.pop(
+            "cardiovision_results",
+            None,
+        )
+
+        st.error(f"Prediction failed: {exc}")
 
 
 # ============================================================
-# DISPLAY RESULTS
+# CARDIAC RISK RESULTS
 # ============================================================
 
 st.divider()
+
 st.markdown("## Cardiac Risk Results")
 
 results = st.session_state.get("cardiovision_results")
@@ -577,20 +806,40 @@ if results:
 
     col1, col2, col3, col4 = st.columns(4)
 
-    col1.metric("Overall CAD", f"{results['CAD']:.1%}")
-    col2.metric("LAD stenosis", f"{results['LAD']:.1%}")
-    col3.metric("LCX stenosis", f"{results['LCX']:.1%}")
-    col4.metric("RCA stenosis", f"{results['RCA']:.1%}")
+    col1.metric(
+        "Overall CAD",
+        f"{results['CAD']:.1%}",
+    )
+
+    col2.metric(
+        "LAD stenosis",
+        f"{results['LAD']:.1%}",
+    )
+
+    col3.metric(
+        "LCX stenosis",
+        f"{results['LCX']:.1%}",
+    )
+
+    col4.metric(
+        "RCA stenosis",
+        f"{results['RCA']:.1%}",
+    )
 
     st.markdown("### Probability overview")
 
-    for key, label in [
+    result_labels = [
         ("CAD", "Overall CAD"),
         ("LAD", "LAD — Left Anterior Descending"),
         ("LCX", "LCX — Left Circumflex"),
         ("RCA", "RCA — Right Coronary Artery"),
-    ]:
-        st.write(f"**{label}:** {results[key]:.1%}")
+    ]
+
+    for key, label in result_labels:
+        st.write(
+            f"**{label}:** {results[key]:.1%}"
+        )
+
         st.progress(results[key])
 
 else:
@@ -600,14 +849,14 @@ else:
 
 
 # ============================================================
-# 3D HEART VIEWER
+# INTERACTIVE 3D HEART
 # ============================================================
 
 st.markdown("## Interactive 3D Heart")
 
 st.caption(
-    "Drag to rotate and scroll to zoom. The 3D model is an anatomical "
-    "visualization; predictions do not identify an exact lesion on this mesh."
+    "Drag to rotate and scroll to zoom. The model is an anatomical "
+    "visualization; predictions do not locate an exact lesion on this mesh."
 )
 
 heart_html = r'''<!DOCTYPE html>
@@ -621,13 +870,19 @@ html, body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: radial-gradient(ellipse at center, #102943, #07111e 75%);
+    background: radial-gradient(
+        ellipse at center,
+        #102943,
+        #07111e 75%
+    );
     font-family: Arial, sans-serif;
 }
+
 #viewer {
     position: absolute;
     inset: 0;
 }
+
 #loading {
     position: absolute;
     inset: 0;
@@ -663,11 +918,13 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 const MODEL_URL = "__HEART_URL__";
+
 const viewer = document.getElementById("viewer");
 const loading = document.getElementById("loading");
 
 try {
     const scene = new THREE.Scene();
+
     scene.background = new THREE.Color(0x07111e);
 
     const camera = new THREE.PerspectiveCamera(
@@ -689,21 +946,40 @@ try {
         Math.min(window.devicePixelRatio || 1, 1.5)
     );
 
-    renderer.setSize(viewer.clientWidth, viewer.clientHeight);
+    renderer.setSize(
+        viewer.clientWidth,
+        viewer.clientHeight
+    );
+
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+
     viewer.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 2.0));
+    scene.add(
+        new THREE.AmbientLight(0xffffff, 2.0)
+    );
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 3.0);
+    const keyLight = new THREE.DirectionalLight(
+        0xffffff,
+        3.0
+    );
+
     keyLight.position.set(3, 4, 5);
     scene.add(keyLight);
 
-    const blueLight = new THREE.DirectionalLight(0x6699ff, 1.1);
+    const blueLight = new THREE.DirectionalLight(
+        0x6699ff,
+        1.1
+    );
+
     blueLight.position.set(-4, 1, 3);
     scene.add(blueLight);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
+    const controls = new OrbitControls(
+        camera,
+        renderer.domElement
+    );
+
     controls.enableDamping = true;
     controls.dampingFactor = 0.06;
     controls.autoRotate = true;
@@ -713,6 +989,7 @@ try {
     controls.maxDistance = 8;
 
     const loader = new GLTFLoader();
+
     loader.setCrossOrigin("anonymous");
 
     loader.load(
@@ -720,21 +997,33 @@ try {
 
         function (gltf) {
             const heart = gltf.scene;
+
             scene.add(heart);
 
             const box = new THREE.Box3().setFromObject(heart);
-            const center = box.getCenter(new THREE.Vector3());
-            const size = box.getSize(new THREE.Vector3());
+
+            const center = box.getCenter(
+                new THREE.Vector3()
+            );
+
+            const size = box.getSize(
+                new THREE.Vector3()
+            );
 
             heart.position.sub(center);
 
-            const maxSize = Math.max(size.x, size.y, size.z);
+            const maxSize = Math.max(
+                size.x,
+                size.y,
+                size.z
+            );
 
             if (maxSize > 0) {
                 heart.scale.setScalar(2.1 / maxSize);
             }
 
             camera.position.set(0, 0, 3);
+
             controls.target.set(0, 0, 0);
             controls.update();
 
@@ -744,7 +1033,10 @@ try {
         undefined,
 
         function (error) {
-            console.error("Could not load heart.glb:", error);
+            console.error(
+                "Could not load heart.glb:",
+                error
+            );
 
             loading.textContent =
                 "Could not load the 3D heart model. "
@@ -754,6 +1046,7 @@ try {
 
     function animate() {
         requestAnimationFrame(animate);
+
         controls.update();
         renderer.render(scene, camera);
     }
@@ -761,16 +1054,28 @@ try {
     animate();
 
     window.addEventListener("resize", function () {
-        const width = Math.max(viewer.clientWidth, 1);
-        const height = Math.max(viewer.clientHeight, 1);
+        const width = Math.max(
+            viewer.clientWidth,
+            1
+        );
+
+        const height = Math.max(
+            viewer.clientHeight,
+            1
+        );
 
         camera.aspect = width / height;
+
         camera.updateProjectionMatrix();
+
         renderer.setSize(width, height);
     });
 
 } catch (error) {
-    console.error("3D viewer initialization failed:", error);
+    console.error(
+        "3D viewer initialization failed:",
+        error
+    );
 
     loading.textContent =
         "The 3D viewer could not start. Check browser WebGL support.";
@@ -792,19 +1097,30 @@ components.html(
 
 st.divider()
 
-st.markdown("""
-<div class="footnote">
-    <b>Research use only.</b> CardioVision3D provides machine-learning
-    estimates based on available clinical features. It is not a medical
-    diagnosis and does not replace professional medical advice. Predictions
-    may be less reliable when many measurements are missing.
-</div>
-""", unsafe_allow_html=True)
+st.markdown(
+    """
+    <div class="footnote">
+        <b>Research use only.</b> CardioVision3D provides machine-learning
+        estimates based on available clinical features. It is not a medical
+        diagnosis and does not replace professional medical advice.
+        Predictions may be less reliable when many measurements are missing.
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 with st.expander("Model and dataset files"):
-    st.write(f"Input features: {len(feature_columns)}")
-    st.write(f"Model: `{MODEL_PATH.name}`")
-    st.write(f"Feature schema: `{FEATURES_PATH.name}`")
+    st.write(
+        f"Input features: {len(feature_columns)}"
+    )
+
+    st.write(
+        f"Model: `{MODEL_PATH.name}`"
+    )
+
+    st.write(
+        f"Feature schema: `{FEATURES_PATH.name}`"
+    )
 
     if saved_metrics:
         st.write("Saved evaluation metrics:")
